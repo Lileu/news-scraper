@@ -28,9 +28,9 @@ router.get("/articles", function(req, res) {
     });
 });
 
-// A GET route for scraping the news website c-entry-box--compact__title
+// GET route to scrape the website 
 router.get('/scrape', function(req, res) {
-    // First, we grab the body of the html with request
+    // pass in the html document
     request('https://www.betootaadvocate.com/', function(error, response, html) {
         // Then, we load that into cheerio and save it to $ for a shorthand selector
         var $ = cheerio.load(html);
@@ -44,12 +44,12 @@ router.get('/scrape', function(req, res) {
             result.title = $(this).children('a').text();
             result.link = $(this).children('a').attr('href');
 
-            //ensures that no empty title or links are sent to mongodb
+            // ensures that no empty title or links are sent to mongodb
             if(result.title !== "" && result.link !== ""){
-              //check for duplicates
+              // check for duplicates
               if(titlesArray.indexOf(result.title) == -1){
 
-                // push the saved title to the array 
+                // push the saved title to the titles array 
                 titlesArray.push(result.title);
 
                 // only add the article if is not already there
@@ -57,10 +57,10 @@ router.get('/scrape', function(req, res) {
                     //if the test is 0, the entry is unique and good to save
                   if(test == 0){
 
-                    //using Article model, create new object
+                    // using Article model, create new object
                     var entry = new Article (result);
 
-                    //save entry to mongodb
+                    // save entry to mongodb
                     entry.save(function(err, doc) {
                       if (err) {
                         console.log(err);
@@ -72,13 +72,13 @@ router.get('/scrape', function(req, res) {
                   }
             });
         }
-        // Log that scrape is working, just the content was missing parts
-        else{
+          // Log to indicate that the scrape worked but the article already exists in the db
+          else{
           console.log('Article already exists.')
         }
 
           }
-          // Log that scrape is working, just the content was missing parts
+          // Log to indicate that the scrape worked but there was incomplete data
           else{
             console.log('Not saved to database, missing data')
           }
@@ -90,7 +90,7 @@ router.get('/scrape', function(req, res) {
 
 
 
-// This will get the articles we scraped from the mongoDB in JSON
+// Route to retrieve the articles we scraped in JSON format
 router.get('/articles-json', function(req, res) {
     Article.find({}, function(err, doc) {
         if (err) {
